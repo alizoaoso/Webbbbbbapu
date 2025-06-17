@@ -1,0 +1,14 @@
+{
+  "name": "text-to-image-serverless",
+  "version": "1.0.0",
+  "description": "Text-to-image generator with Hugging Face API and Node.js serverless backend",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  }
+}
