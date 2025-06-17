@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Image</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; }
+        input[type="text"] { width: calc(100% - 22px); padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; }
+        button {
+            display: block; width: 100%; padding: 10px; background-color: #007bff; color: white; border: none;
+            border-radius: 4px; cursor: pointer; font-size: 16px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #ccc; }
+        #imageContainer { margin-top: 20px; text-align: center; }
+        #generatedImage { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; }
+        .spinner {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Text-to-Image Generator</h1>
+
+        <label for="prompt">Enter your prompt:</label>
+        <input type="text" id="promptInput" placeholder="e.g., A cat wearing a superhero costume">
+
+        <button id="generateButton">Generate Image</button>
+
+        <div id="spinner" class="spinner"></div>
+
+        <div id="imageContainer">
+            <img id="generatedImage" src="#" alt="Generated Image will appear here">
+        </div>
+    </div>
+
+    <script>
+        const promptInput = document.getElementById('promptInput');
+        const generateButton = document.getElementById('generateButton');
+        const generatedImage = document.getElementById('generatedImage');
+        const imageContainer = document.getElementById('imageContainer');
+        const spinner = document.getElementById('spinner');
+        let currentObjectURL = null;
+
+        generateButton.addEventListener('click', async () => {
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                alert('Please enter a prompt.');
+                return;
+            }
+
+            if (currentObjectURL) {
+                URL.revokeObjectURL(currentObjectURL); // Revoke old object URL to free memory
+                currentObjectURL = null;
+            }
+
+            generatedImage.style.display = 'none'; // Hide previous image
+            spinner.style.display = 'block'; // Show spinner
+            generateButton.disabled = true;
+
+            try {
+                const response = await fetch(`index.php?prompt=${encodeURIComponent(prompt)}`);
+
+                if (!response.ok) {
+                    let errorMsg = `Error: ${response.status} ${response.statusText}`;
+                    try {
+                        const errorData = await response.json(); // Try to parse error from backend
+                        if (errorData && errorData.error) {
+                            errorMsg += ` - ${errorData.error}`;
+                        }
+                    } catch (e) {
+                        // Could not parse JSON error, stick with status text
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                const imageBlob = await response.blob();
+                currentObjectURL = URL.createObjectURL(imageBlob);
+                generatedImage.src = currentObjectURL;
+                generatedImage.style.display = 'block';
+
+            } catch (error) {
+                console.error('Failed to generate image:', error);
+                alert(`Failed to generate image: ${error.message}`);
+                generatedImage.src = '#'; // Clear image source on error
+                generatedImage.alt = 'Failed to load image';
+            } finally {
+                spinner.style.display = 'none'; // Hide spinner
+                generateButton.disabled = false;
+            }
+        });
+
+        // Optional: Hide the alt text before the first image is generated
+        generatedImage.alt = '';
+        generatedImage.style.display = 'none';
+
+    </script>
+</body>
+</html>

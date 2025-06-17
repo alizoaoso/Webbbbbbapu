@@ -3,13 +3,13 @@ error_reporting(0);
 
 function generateImage(string $prompt): ?string
 {
-    $url = "https://ai-api.magicstudio.com/api/ai-art-generator";
-    $boundary = "----WebKitFormBoundaryGXtYBPRK8jSiu6FI";
+    $url = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-3-medium-diffusers";
 
-    $payload = buildPayload($boundary, $prompt);
+    $payload = buildPayload($prompt);
 
     $headers = [
-        'Content-Type: multipart/form-data; boundary=' . $boundary,
+        'Content-Type: application/json',
+        'Authorization: Bearer YOUR_HF_TOKEN_PLACEHOLDER',
         'Accept: application/json, text/plain, */*',
         'Origin: https://magicstudio.com',
         'Referer: https://magicstudio.com/ai-art-generator/',
@@ -38,30 +38,9 @@ function generateImage(string $prompt): ?string
     return ($httpCode === 200) ? $response : null;
 }
 
-function buildPayload(string $boundary, string $prompt): string
+function buildPayload(string $prompt): string
 {
-    return "--$boundary\r\n"
-        . "Content-Disposition: form-data; name=\"prompt\"\r\n\r\n"
-        . "$prompt\r\n"
-        . "--$boundary\r\n"
-        . "Content-Disposition: form-data; name=\"output_format\"\r\n\r\n"
-        . "bytes\r\n"
-        . "--$boundary\r\n"
-        . "Content-Disposition: form-data; name=\"user_profile_id\"\r\n\r\n"
-        . "null\r\n"
-        . "--$boundary\r\n"
-        . "Content-Disposition: form-data; name=\"anonymous_user_id\"\r\n\r\n"
-        . "38717863-5af8-4806-b04b-f87e5cae88f6\r\n"
-        . "--$boundary\r\n"
-        . "Content-Disposition: form-data; name=\"request_timestamp\"\r\n\r\n"
-        . "1733430659.826\r\n"
-        . "--$boundary\r\n"
-        . "Content-Disposition: form-data; name=\"user_is_subscribed\"\r\n\r\n"
-        . "false\r\n"
-        . "--$boundary\r\n"
-        . "Content-Disposition: form-data; name=\"client_id\"\r\n\r\n"
-        . "pSgX7WgjukXCBoYwDM8G8GLnRRkvAoJlqa5eAVvj95o\r\n"
-        . "--$boundary--";
+    return json_encode(['inputs' => $prompt]);
 }
 
 function handleRequest()
